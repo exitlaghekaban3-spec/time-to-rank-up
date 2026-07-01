@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Stars - Rank Time Calculator</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --container-bg: #161925;
+            --accent-color: #ff5e00;
+            --accent-hover: #e05300;
+            --text-color: #ffffff;
+            --text-secondary: #8b92b5;
+            --input-bg: #1f2336;
+            --border-color: #2e344d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .calculator-card {
+            background-color: var(--container-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-color);
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .input-with-suffix {
+            display: flex;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--input-bg);
+        }
+
+        .input-with-suffix input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px;
+            color: var(--text-color);
+            font-size: 16px;
+            outline: none;
+        }
+
+        .input-with-suffix select {
+            background-color: var(--border-color);
+            border: none;
+            color: var(--text-color);
+            padding: 0 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .input-with-suffix select:hover {
+            background-color: #3b4261;
+        }
+
+        .standard-select {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-color);
+            font-size: 16px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .standard-select:focus {
+            border-color: var(--accent-color);
+        }
+
+        .gamepass-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .gamepass-options label {
+            flex: 1;
+            text-align: center;
+            background-color: var(--input-bg);
+            border: 2px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: normal;
+            transition: all 0.2s;
+            margin-bottom: 0;
+        }
+
+        .gamepass-options input[type="radio"] {
+            display: none;
+        }
+
+        .gamepass-options input[type="radio"]:checked+label {
+            background-color: rgba(255, 94, 0, 0.15);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-calculate:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .result-box {
+            margin-top: 25px;
+            background-color: rgba(255, 94, 0, 0.05);
+            border: 1px dashed var(--accent-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .result-box h3 {
+            color: var(--accent-color);
+            font-size: 16px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(46, 52, 77, 0.5);
+            padding-bottom: 6px;
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .result-value {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .result-value.highlight {
+            color: #00ff66;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="calculator-card">
+        <div class="header">
+            <h1>Rank Up Calculator</h1>
+            <p>Calculate the exact time required for your next rank</p>
+        </div>
+
+        <form action="/" method="POST">
+            <div class="form-group">
+                <label for="multiplier">Your Power Multiplier</label>
+                <div class="input-with-suffix">
+                    <input type="number" step="any" name="multiplier" id="multiplier" value="{{ inputs.multiplier }}"
+                        required>
+                    <select name="suffix">
+                        <option value="" {% if inputs.suffix=="" %}selected{% endif %}>No Suffix</option>
+                        {% for suffix in suffixes %}
+                        <option value="{{ suffix }}" {% if inputs.suffix==suffix %}selected{% endif %}>{{ suffix }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="rank">Target Rank</label>
+                <select name="rank" id="rank" class="standard-select">
+                    {% for val, label in ranks_options %}
+                    <option value="{{ val }}" {% if inputs.rank==val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Fast Click Gamepass</label>
+                <div class="gamepass-options">
+                    <input type="radio" name="fast_click" id="fc_no" value="no" {% if inputs.fast_click=="no"
+                        %}checked{% endif %}>
+                    <label for="fc_no">Without Pass (2.66 cps)</label>
+
+                    <input type="radio" name="fast_click" id="fc_yes" value="yes" {% if inputs.fast_click=="yes"
+                        %}checked{% endif %}>
+                    <label for="fc_yes">With Pass (3.66 cps)</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-calculate">Calculate Time</button>
+        </form>
+
+        {% if result %}
+        <div class="result-box">
+            <h3>Calculation Results</h3>
+            <div class="result-row">
+                <span>Target Rank:</span>
+                <span class="result-value">Rank {{ result.rank }}</span>
+            </div>
+            <div class="result-row">
+                <span>Required Power:</span>
+                <span class="result-value">{{ result.required_power }}</span>
+            </div>
+            <div class="result-row">
+                <span>Your Click Speed:</span>
+                <span class="result-value">{{ result.clicks_speed }} clicks/sec</span>
+            </div>
+            <div class="result-row"
+                style="margin-top: 12px; border-top: 1px solid var(--accent-color); padding-top: 10px;">
+                <span style="font-weight: bold; color: var(--accent-color);">Estimated Time:</span>
+                <span class="result-value highlight">{{ result.time_needed }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</body>
+
+</html>
