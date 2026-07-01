@@ -33,7 +33,6 @@ SUFFIXES = {
     'βM': 1_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000,
 }
 
-# Raw definitions to cleanly build values and lookups
 RAW_RANKS = {
     1: "15K", 2: "200K", 3: "1.5M", 4: "10.5M", 5: "70M", 6: "455M", 7: "2.5B", 8: "12.5B",
     9: "50B", 10: "225B", 11: "1.1T", 12: "7.5T", 13: "52.5T", 14: "395T", 15: "3.1Qa",
@@ -46,36 +45,14 @@ RAW_RANKS = {
 
 def parse_rank_value(val_str):
     val_str = str(val_str).strip().replace(',', '.')
-    
-    # Сортируем суффиксы от самых длинных к самым коротким, 
-    # чтобы 'βB' проверялся раньше, чем одиночная 'B'
     sorted_suffixes = sorted(SUFFIXES.items(), key=lambda x: len(x[0]), reverse=True)
-    
     for suffix, multiplier in sorted_suffixes:
         if val_str.endswith(suffix):
             num_part = val_str[:-len(suffix)].strip()
-            try:
-                return float(num_part) * multiplier
-            except ValueError:
-                pass
-    try:
-        return float(val_str)
-    except ValueError:
-        return 0.0
-
-def format_game_number(num):
-    if num == 0:
-        return "0"
-    abs_num = abs(num)
-    for suffix, multiplier in sorted(SUFFIXES.items(), key=lambda x: x[1], reverse=True):
-        if abs_num >= multiplier:
-            formatted = f"{num / multiplier:.2f}".rstrip('0').rstrip('.')
-            return f"{formatted}{suffix}"
-    return f"{num:.2f}".rstrip('0').rstrip('.')
+            return float(num_part) * multiplier
+    return float(val_str)
 
 RANKS_NUMERIC = {r: parse_rank_value(v) for r, v in RAW_RANKS.items()}
-
-# Generated tuple for template select menu: (rank_number, "Rank X (Value)")
 RANKS_SELECT_OPTIONS = [(r, f"Rank {r} ({v})") for r, v in RAW_RANKS.items()]
 
 def format_time(seconds):
@@ -100,6 +77,11 @@ def index():
     if request.method == "POST":
         multiplier_raw = request.form.get("multiplier", "0").replace(',', '.')
         selected_suffix = request.form.get("suffix", "")
+        
+        # Получаем данные текущей силы игрока
+        current_power_raw = request.form.get("current_power", "0").replace(',', '.')
+        current_power_suffix = request.form.get("current_power_suffix", "")
+        
         target_rank = int(request.form.get("rank", "1"))
         has_fast_click = request.form.get("fast_click") == "yes"
         
@@ -108,18 +90,33 @@ def index():
         except ValueError:
             base_multiplier = 0.0
             
+        try:
+            base_current_power = float(current_power_raw) if current_power_raw else 0.0
+        except ValueError:
+            base_current_power = 0.0
+            
         suffix_value = SUFFIXES.get(selected_suffix, 1)
         total_multiplier = base_multiplier * suffix_value
+        
+        # Считаем точную текущую силу игрока с учётом её суффикса
+        cp_suffix_value = SUFFIXES.get(current_power_suffix, 1)
+        total_current_power = base_current_power * cp_suffix_value
+        
         clicks_per_second = 3.66 if has_fast_click else 2.66
         power_per_second = total_multiplier * clicks_per_second
+        
         required_power = RANKS_NUMERIC.get(target_rank, 0.0)
         
-        if power_per_second > 0:
-            time_formatted = format_time(required_power / power_per_second)
+        # Вычисляем, сколько ЕЩЕ силы осталось набрать
+        power_left_needed = required_power - total_current_power
+        
+        if power_left_needed <= 0:
+            time_formatted = "You already have this rank!"
+        elif power_per_second > 0:
+            time_formatted = format_time(power_left_needed / power_per_second)
         else:
             time_formatted = "Infinite (Enter a valid multiplier)"
             
-        # Store results AND form inputs to avoid resets
         session["rank_calc_data"] = {
             "result": {
                 "rank": target_rank,
@@ -130,6 +127,8 @@ def index():
             "inputs": {
                 "multiplier": multiplier_raw,
                 "suffix": selected_suffix,
+                "current_power": current_power_raw,
+                "current_power_suffix": current_power_suffix,
                 "rank": target_rank,
                 "fast_click": "yes" if has_fast_click else "no"
             }
@@ -138,7 +137,11 @@ def index():
         
     data = session.pop("rank_calc_data", None)
     result = data.get("result") if data else None
-    inputs = data.get("inputs") if data else {"multiplier": "", "suffix": "", "rank": 1, "fast_click": "no"}
+    inputs = data.get("inputs") if data else {
+        "multiplier": "", "suffix": "", 
+        "current_power": "", "current_power_suffix": "", 
+        "rank": 1, "fast_click": "no"
+    }
     
     return render_template("index.html", suffixes=SUFFIXES.keys(), ranks_options=RANKS_SELECT_OPTIONS, result=result, inputs=inputs)
 

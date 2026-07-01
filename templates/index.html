@@ -219,11 +219,26 @@
 
     <div class="calculator-card">
         <div class="header">
-            <h1>Rank Up Calculator</h1>
+            <h1>Anime Astral</h1>
             <p>Calculate the exact time required for your next rank</p>
         </div>
 
         <form action="/" method="POST">
+            <div class="form-group">
+                <label for="current_power">Your Current Power</label>
+                <div class="input-with-suffix">
+                    <input type="number" step="any" name="current_power" id="current_power"
+                        value="{{ inputs.current_power }}">
+                    <select name="current_power_suffix">
+                        <option value="" {% if inputs.current_power_suffix=="" %}selected{% endif %}>No Suffix</option>
+                        {% for suffix in suffixes %}
+                        <option value="{{ suffix }}" {% if inputs.current_power_suffix==suffix %}selected{% endif %}>{{
+                            suffix }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="multiplier">Your Power Multiplier</label>
                 <div class="input-with-suffix">
@@ -281,7 +296,7 @@
             </div>
             <div class="result-row"
                 style="margin-top: 12px; border-top: 1px solid var(--accent-color); padding-top: 10px;">
-                <span style="font-weight: bold; color: var(--accent-color);">Estimated Time:</span>
+                <span style="font-weight: bold; color: var(--accent-color);">Estimated Time Remaining:</span>
                 <span class="result-value highlight">{{ result.time_needed }}</span>
             </div>
         </div>
